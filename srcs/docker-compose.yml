@@ -1,0 +1,60 @@
+# version : "3.9"
+
+services:
+  nginx:
+    container_name: nginx
+    build: ./requirements/nginx
+    restart: unless-stopped
+    ports:
+      - '443:443'
+    env_file:
+      - .env
+    depends_on:
+      - wordpress
+    networks:
+      - inception
+    volumes:
+      - wordpress:/var/www/wordpress
+
+  mariadb:
+    container_name: mariadb
+    build: ./requirements/mariadb
+    restart: unless-stopped
+    env_file:
+      - .env
+    networks:
+      - inception
+    volumes :
+      - mariadb:/var/lib/mysql
+
+  wordpress:
+    container_name: wordpress
+    build: ./requirements/wordpress
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - mariadb
+    networks:
+      - inception
+    volumes:
+      - wordpress:/var/www/wordpress
+
+volumes:
+  wordpress:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind' #bind monting = volumes mounting on access path to host and can be modified by other outside processes
+      device: '/home/gpaupher/data/wordpress'
+
+  mariadb:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: '/home/gpaupher/data/mariadb'
+
+networks:
+  inception:
+    driver: bridge #host overlay macvlan none
